@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Mes Téléphones</title>
+
+  <!-- Carte Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f5f9;
+      color: #172033;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 18px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 15px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top h1 {
+      font-size: 26px;
+    }
+
+    .status {
+      background: #dcfce7;
+      color: #15803d;
+      padding: 10px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    #map {
+      height: 450px;
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px #0002;
+    }
+
+    .panel {
+      background: white;
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 3px 12px #0001;
+    }
+
+    .device {
+      padding: 15px;
+      margin-top: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+    }
+
+    .device strong {
+      font-size: 18px;
+    }
+
+    .online {
+      color: #16a34a;
+      float: right;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 15px;
+      border: 0;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    button:active {
+      background: #1d4ed8;
+    }
+
+    #message {
+      margin-top: 12px;
+      color: #555;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  📱 Mes Téléphones
+</header>
+
+<div class="container">
+
+  <div class="top">
+    <h1>Tableau de bord</h1>
+    <div class="status">● Système actif</div>
+  </div>
+
+  <!-- VRAIE CARTE -->
+  <div id="map"></div>
+
+  <div class="panel">
+
+    <h2>📱 Mes appareils</h2>
+
+    <div class="device">
+      <strong>Samsung S8</strong>
+      <span class="online">● En ligne</span>
+
+      <p>📍 Position GPS de ce téléphone</p>
+      <p id="position">Position inconnue</p>
+
+      <button onclick="localiserMonTelephone()">
+        📍 Localiser ce téléphone
+      </button>
+    </div>
+
+    <div class="device">
+      <strong>Samsung A52</strong>
+
+      <p>📍 Pas encore connecté</p>
+
+      <button onclick="alert('Le Samsung A52 sera connecté dans la prochaine étape.')">
+        📍 Localiser
+      </button>
+    </div>
+
+  </div>
+
+  <div id="message"></div>
+
+</div>
+
+
+<!-- Leaflet -->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+  // Création de la carte
+  const map = L.map('map').setView([6.1256, 1.2254], 12);
+
+  // Carte OpenStreetMap
+  L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution: '&copy; OpenStreetMap contributors'
+    }
+  ).addTo(map);
+
+
+  let marqueur = null;
+
+
+  // Localiser le téléphone
+  function localiserMonTelephone() {
+
+    const message = document.getElementById("message");
+    const position = document.getElementById("position");
+
+    if (!navigator.geolocation) {
+
+      message.innerHTML =
+        "❌ La géolocalisation n'est pas disponible sur ce téléphone.";
+
+      return;
+    }
+
+    message.innerHTML =
+      "⏳ Recherche de votre position GPS...";
+
+
+    navigator.geolocation.getCurrentPosition(
+
+      function(pos) {
+
+        const latitude = pos.coords.latitude;
+        const longitude = pos.coords.longitude;
+
+        // Affichage des coordonnées
+        position.innerHTML =
+          "Latitude : " + latitude.toFixed(6) +
+          "<br>Longitude : " + longitude.toFixed(6);
+
+
+        // Supprimer ancien marqueur
+        if (marqueur) {
+          map.removeLayer(marqueur);
+        }
+
+
+        // Ajouter le nouveau marqueur
+        marqueur = L.marker([
+          latitude,
+          longitude
+        ]).addTo(map);
+
+
+        marqueur.bindPopup(
+          "<b>📱 Samsung S8</b><br>" +
+          "📍 Position actuelle"
+        ).openPopup();
+
+
+        // Centrer la carte
+        map.setView(
+          [latitude, longitude],
+          16
+        );
+
+
+        message.innerHTML =
+          "✅ Position GPS trouvée.";
+
+      },
+
+
+      function(error) {
+
+        message.innerHTML =
+          "❌ Impossible d'obtenir la position GPS.<br>" +
+          "Vérifie que la localisation est activée et autorise Chrome à utiliser ta position.";
+
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+
+    );
+
+  }
+
+</script>
+
+</body>
+</html>
